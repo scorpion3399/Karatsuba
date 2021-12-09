@@ -1,9 +1,20 @@
+/**
+ *
+ * Title:  Karatsuba's algortihm for multiplication in C
+ * Author: Panagiotis Vasileiou
+ * Date:   28 Nov 2021
+ *
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #define mytype_t signed long long
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
+#define DIGITS(X) (floor(log10(abs(X))) + 1))
 
 static const char err_msg[32] = "Wrong number of arguments!!!\n";
 
@@ -12,7 +23,7 @@ typedef struct hilo {
 	mytype_t lo;
 } hilo;
 
-int sz_base2(type_t x)
+int sz_base2(mytype_t x)
 {
 	int sz = 0;
 	while (x != 0)
@@ -23,6 +34,18 @@ int sz_base2(type_t x)
 	return sz;
 }
 
+int sz_base10(mytype_t x)
+{
+	int sz = 0;
+	while (x != 0)
+	{
+		x = x/10;
+		sz++;
+	}
+	return sz;
+}
+
+
 hilo split_at(mytype_t num, int m)
 {
 	hilo temp;
@@ -32,26 +55,26 @@ hilo split_at(mytype_t num, int m)
 	return temp;
 }
 
-type_t karatsuba(mytype_t num1, mytype_t num2)
+mytype_t karatsuba(mytype_t num1, mytype_t num2)
 {
-	if ( num1 < 2 || num2 < 2)
+	if ( num1 < 10 || num2 < 10)
 		return num1 * num2; /* fall back to traditional multiplication */
 
 	/* Calculates the size of the numbers. */
-	int m = MIN(sz_base2(num1), sz_base2(num2));
-	int m2 = m>>1;
+	int m = MIN(sz_base10(num1), sz_base10(num2));
+	int m2 = m/2;
 	
 	/* Split the digit sequences in the middle. */
 	hilo H1L1 = split_at(num1, m2);
 	hilo H2L2 = split_at(num2, m2);
 
-
 	/* 3 recursive calls made to numbers approximately half the size. */
-	type_t z0 = karatsuba(H1L1.lo, H2L2.lo);
-	type_t z1 = karatsuba(H1L1.lo + H1L1.hi, H2L2.lo + H2L2.hi);
-	type_t z2 = karatsuba(H1L1.hi, H2L2.hi);
+	mytype_t z0 = karatsuba(H1L1.lo, H2L2.lo);
+	mytype_t z1 = karatsuba(H1L1.lo + H1L1.hi, H2L2.lo + H2L2.hi);
+	mytype_t z2 = karatsuba(H1L1.hi, H2L2.hi);
 
-	return (z2<<(m2*2)) + ((z1 - z2 - z0)<<m2) + z0; // alt way, prob faster
+	// return (z2<<(m2*2)) + ((z1 - z2 - z0)<<m2) + z0; // old, with base 2
+	return (10^(2*m2))*z2 + (10^m2)*(z1 - z2 - z0) + z0;
 }
 
 int main(int argc, char* argv[])
